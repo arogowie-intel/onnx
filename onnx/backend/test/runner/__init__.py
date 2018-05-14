@@ -32,7 +32,8 @@ class BackendIsNotSupposedToImplementIt(unittest.SkipTest):
 
 class Runner(object):
 
-    def __init__(self, backend, parent_module=None):  # type: (Backend, Optional[str]) -> None
+    def __init__(self, backend, parent_module=None, devices=('CPU', 'CUDA')):
+        # type: (Backend, Iterable[Text], Optional[str]) -> None
         self.backend = backend
         self._parent_module = parent_module
         self._include_patterns = set()  # type: Set[Pattern[Text]]
@@ -45,19 +46,19 @@ class Runner(object):
         self._test_items = defaultdict(dict)  # type: Dict[Text, Dict[Text, TestItem]]
 
         for rt in load_model_tests(kind='node'):
-            self._add_model_test(rt, 'Node')
+            self._add_model_test(rt, 'Node', devices)
 
         for rt in load_model_tests(kind='real'):
-            self._add_model_test(rt, 'Real')
+            self._add_model_test(rt, 'Real', devices)
 
         for rt in load_model_tests(kind='simple'):
-            self._add_model_test(rt, 'Simple')
+            self._add_model_test(rt, 'Simple', devices)
 
         for ct in load_model_tests(kind='pytorch-converted'):
-            self._add_model_test(ct, 'PyTorchConverted')
+            self._add_model_test(ct, 'PyTorchConverted', devices)
 
         for ot in load_model_tests(kind='pytorch-operator'):
-            self._add_model_test(ot, 'PyTorchOperator')
+            self._add_model_test(ot, 'PyTorchOperator', devices)
 
     def _get_test_case(self, name):  # type: (Text) -> Type[unittest.TestCase]
         test_case = type(str(name), (unittest.TestCase,), {})
@@ -229,7 +230,7 @@ class Runner(object):
         for device in devices:
             add_device_test(device)
 
-    def _add_model_test(self, model_test, kind):  # type: (TestCase, Text) -> None
+    def _add_model_test(self, model_test, kind, devices):  # type: (TestCase, Text, Iterable[Text]) -> None
         # model is loaded at runtime, note sometimes it could even
         # never loaded if the test skipped
         model_marker = [None]  # type: List[Optional[Union[ModelProto, NodeProto]]]
@@ -275,4 +276,4 @@ class Runner(object):
                 outputs = list(prepared_model.run(inputs))
                 self._assert_similar_outputs(ref_outputs, outputs)
 
-        self._add_test(kind + 'Model', model_test.name, run, model_marker)
+        self._add_test(kind + 'Model', model_test.name, run, model_marker, devices)
