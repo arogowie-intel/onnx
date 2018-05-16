@@ -38,7 +38,7 @@ class Runner(object):
         self._parent_module = parent_module
         self._include_patterns = set()  # type: Set[Pattern[Text]]
         self._exclude_patterns = set()  # type: Set[Pattern[Text]]
-        self.devices = devices
+        self.devices = devices  # type: Iterable[Text]
 
         # This is the source of the truth of all test functions.
         # Properties `test_cases`, `test_suite` and `tests` will be
